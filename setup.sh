@@ -56,8 +56,8 @@ openssl x509 -req -in certificates/client.csr -CA certificates/ca-cert.pem -CAke
     -extensions v3_req -extfile <(
 cat <<EOF
 [v3_req]
-basicConstraints = CA:FALSE
-keyUsage = critical,digitalSignature,keyEncipherment
+basicConstraints = critical,CA:FALSE
+keyUsage = critical,digitalSignature
 EOF
 )
 
