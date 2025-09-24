@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# AWS IAM Roles Anywhere Demo Script
+# Demo script to test IAM Roles Anywhere
 set -e
 
 echo "🎯 AWS IAM Roles Anywhere Demo"
 echo "================================"
 
-# Check if setup was run
+# Make sure setup completed
 if [ ! -f "certificates/ca-cert.pem" ] || [ ! -f "certificates/client-cert.pem" ]; then
     echo "❌ Certificates not found. Please run ./setup.sh first."
     exit 1
@@ -17,10 +17,10 @@ if [ ! -f "aws_signing_helper" ]; then
     exit 1
 fi
 
-# Get current directory for absolute paths
+# Need full paths for the helper
 DEMO_DIR=$(pwd)
 
-# Create temporary AWS config
+# Setup AWS config for this demo
 mkdir -p ~/.aws
 cat > ~/.aws/config-roles-anywhere << EOF
 [profile roles-anywhere-demo]
@@ -31,8 +31,8 @@ echo ""
 echo "🔐 Testing IAM Roles Anywhere authentication..."
 echo ""
 
-# Test 1: Get caller identity
-echo "📋 Test 1: Getting caller identity with certificate-based authentication"
+# First test - who are we?
+echo "📋 Test 1: Getting caller identity with certificate authentication"
 AWS_CONFIG_FILE=~/.aws/config-roles-anywhere aws sts get-caller-identity --profile roles-anywhere-demo
 
 echo ""
@@ -40,8 +40,8 @@ echo "📋 Test 2: Listing S3 buckets (ReadOnly access)"
 AWS_CONFIG_FILE=~/.aws/config-roles-anywhere aws s3 ls --profile roles-anywhere-demo
 
 echo ""
-echo "📋 Test 3: Trying to create S3 bucket (should fail - ReadOnly access)"
-AWS_CONFIG_FILE=~/.aws/config-roles-anywhere aws s3 mb s3://test-bucket-should-fail-$(date +%s) --profile roles-anywhere-demo 2>&1 || echo "✅ Expected failure - ReadOnly access working correctly"
+echo "📋 Test 3: Trying to create S3 bucket (should fail with ReadOnly)"
+AWS_CONFIG_FILE=~/.aws/config-roles-anywhere aws s3 mb s3://test-bucket-should-fail-$(date +%s) --profile roles-anywhere-demo 2>&1 || echo "✅ Good - ReadOnly permissions working as expected"
 
 echo ""
 echo "🎉 Demo completed successfully!"

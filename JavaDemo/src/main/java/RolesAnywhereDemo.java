@@ -11,11 +11,11 @@ public class RolesAnywhereDemo {
         System.out.println("========================================");
         
         try {
-            // Use the profile with IAM Roles Anywhere credentials
+            // Load credentials from our configured profile
             ProfileCredentialsProvider credentialsProvider = 
                 ProfileCredentialsProvider.create("rolesanywhere-demo");
             
-            // Test 1: Get caller identity with certificate-based authentication
+            // First test - verify our identity
             System.out.println("\n📋 Test 1: Getting caller identity with certificate-based authentication");
             StsClient stsClient = StsClient.builder()
                 .region(Region.US_EAST_1)
@@ -27,7 +27,7 @@ public class RolesAnywhereDemo {
             System.out.println("Account: " + identity.account());
             System.out.println("ARN: " + identity.arn());
             
-            // Test 2: List S3 buckets (ReadOnly access)
+            // Second test - check what we can access
             System.out.println("\n📋 Test 2: Listing S3 buckets (ReadOnly access)");
             S3Client s3Client = S3Client.builder()
                 .region(Region.US_EAST_1)
@@ -42,7 +42,7 @@ public class RolesAnywhereDemo {
                     System.out.println(bucket.creationDate() + " " + bucket.name()));
             }
             
-            // Test 3: Try to create S3 bucket (should fail - ReadOnly access)
+            // Third test - verify permission limits
             System.out.println("\n📋 Test 3: Trying to create S3 bucket (should fail - ReadOnly access)");
             try {
                 s3Client.createBucket(builder -> builder.bucket("test-bucket-" + System.currentTimeMillis()));

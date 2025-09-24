@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Setup AWS config for IAM Roles Anywhere Java Demo
+# Configure AWS profile for Java demo
 set -e
 
 echo "🔧 Setting up AWS config for Java SDK demo..."
 
-# Get current directory (should be JavaDemo)
+# Figure out where we are
 DEMO_DIR=$(pwd)
 PROJECT_ROOT=$(dirname "$DEMO_DIR")
 
-# Get ARNs from AWS
+# Fetch the ARNs we need
 echo "📋 Retrieving AWS resource ARNs..."
 
 ROLE_ARN=$(aws iam get-role --role-name IAMRolesAnywhereDemo --query 'Role.Arn' --output text)
@@ -20,13 +20,13 @@ echo "Role ARN: $ROLE_ARN"
 echo "Trust Anchor ARN: $TRUST_ANCHOR_ARN"
 echo "Profile ARN: $PROFILE_ARN"
 
-# Create AWS config directory if it doesn't exist
+# Make sure config dir exists
 mkdir -p ~/.aws
 
-# Create or update config file
+# Setup config file
 CONFIG_FILE=~/.aws/config
 
-# Check if rolesanywhere-demo profile already exists
+# See if profile already exists
 if grep -q "\[profile rolesanywhere-demo\]" "$CONFIG_FILE" 2>/dev/null; then
     echo "ℹ️  Profile 'rolesanywhere-demo' already exists in $CONFIG_FILE"
     echo "Please manually update it with the following configuration:"

@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# AWS IAM Roles Anywhere Demo Cleanup Script
+# Cleanup script for demo resources
 set -e
 
 echo "🧹 Cleaning up AWS IAM Roles Anywhere Demo resources..."
 
-# Function to safely delete resources
+# Helper to delete things safely
 safe_delete() {
     local resource_type="$1"
     local command="$2"
@@ -18,25 +18,25 @@ safe_delete() {
     fi
 }
 
-# Delete Profile
+# Remove the profile
 PROFILE_ID=$(aws rolesanywhere list-profiles --query 'profiles[?name==`DemoProfile`].profileId' --output text 2>/dev/null || echo "")
 if [ -n "$PROFILE_ID" ]; then
     safe_delete "Profile" "aws rolesanywhere delete-profile --profile-id $PROFILE_ID" "DemoProfile"
 fi
 
-# Delete Trust Anchor
+# Remove trust anchor
 TRUST_ANCHOR_ID=$(aws rolesanywhere list-trust-anchors --query 'trustAnchors[?name==`DemoTrustAnchor`].trustAnchorId' --output text 2>/dev/null || echo "")
 if [ -n "$TRUST_ANCHOR_ID" ]; then
     safe_delete "Trust Anchor" "aws rolesanywhere delete-trust-anchor --trust-anchor-id $TRUST_ANCHOR_ID" "DemoTrustAnchor"
 fi
 
-# Detach policy from role
+# Remove policy from role
 safe_delete "Policy attachment" "aws iam detach-role-policy --role-name IAMRolesAnywhereDemo --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess" "ReadOnlyAccess from IAMRolesAnywhereDemo"
 
-# Delete IAM role
+# Remove the role
 safe_delete "IAM Role" "aws iam delete-role --role-name IAMRolesAnywhereDemo" "IAMRolesAnywhereDemo"
 
-# Clean up local files
+# Remove local files
 echo "🗂️  Cleaning up local files..."
 rm -rf certificates/
 rm -f aws_signing_helper
