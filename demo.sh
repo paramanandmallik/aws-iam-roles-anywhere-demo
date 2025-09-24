@@ -24,7 +24,7 @@ DEMO_DIR=$(pwd)
 mkdir -p ~/.aws
 cat > ~/.aws/config-roles-anywhere << EOF
 [profile roles-anywhere-demo]
-credential_process = ${DEMO_DIR}/aws_signing_helper credential-process --certificate ${DEMO_DIR}/certificates/client-cert.pem --private-key ${DEMO_DIR}/certificates/client-key.pem --trust-anchor-arn arn:aws:rolesanywhere:us-east-1:$(aws sts get-caller-identity --query Account --output text):trust-anchor/$(aws rolesanywhere list-trust-anchors --query 'trustAnchors[?name==\`DemoTrustAnchor\`].trustAnchorId' --output text) --profile-arn arn:aws:rolesanywhere:us-east-1:$(aws sts get-caller-identity --query Account --output text):profile/$(aws rolesanywhere list-profiles --query 'profiles[?name==\`DemoProfile\`].profileId' --output text) --role-arn arn:aws:iam::$(aws sts get-caller-identity --query Account --output text):role/IAMRolesAnywhereDemo
+credential_process = ${DEMO_DIR}/aws_signing_helper credential-process --certificate ${DEMO_DIR}/certificates/client-cert.pem --private-key ${DEMO_DIR}/certificates/client-key.pem --trust-anchor-arn $(aws rolesanywhere list-trust-anchors --query 'trustAnchors[?name==`DemoTrustAnchor`].trustAnchorArn' --output text) --profile-arn $(aws rolesanywhere list-profiles --query 'profiles[?name==`DemoProfile`].profileArn' --output text) --role-arn arn:aws:iam::$(aws sts get-caller-identity --query Account --output text):role/IAMRolesAnywhereDemo
 EOF
 
 echo ""

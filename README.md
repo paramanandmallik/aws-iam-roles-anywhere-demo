@@ -10,12 +10,14 @@ AWS IAM Roles Anywhere enables workloads outside of AWS to access AWS resources 
 - **Certificate-based Authentication**: Uses PKI infrastructure you already have
 - **Temporary Credentials**: Short-lived tokens with automatic expiration
 - **Fine-grained Access Control**: Standard IAM policies and roles
+- **Zero Trust Architecture**: Aligns with modern security frameworks
 
 ## Prerequisites
 
 - AWS CLI installed and configured with administrative permissions
 - OpenSSL installed
 - Bash shell (Linux/macOS/WSL)
+- Internet connection for downloading AWS signing helper
 
 ## Quick Start
 
@@ -60,9 +62,9 @@ The demo demonstrates:
 
 📋 Test 1: Getting caller identity with certificate-based authentication
 {
-    "UserId": "AROA...:botocore-session-1234567890",
+    "UserId": "AROA...:3495443a366e075b8cef160712fee5034339a042",
     "Account": "123456789012",
-    "Arn": "arn:aws:sts::123456789012:assumed-role/IAMRolesAnywhereDemo/botocore-session-1234567890"
+    "Arn": "arn:aws:sts::123456789012:assumed-role/IAMRolesAnywhereDemo/3495443a366e075b8cef160712fee5034339a042"
 }
 
 📋 Test 2: Listing S3 buckets (ReadOnly access)
@@ -102,12 +104,34 @@ iam-roles-anywhere-demo/
     └── client-key.pem  # Client private key
 ```
 
+## Platform Support
+
+The demo automatically detects your platform and downloads the appropriate AWS signing helper:
+
+- **macOS**: Intel (x86_64) and Apple Silicon (arm64)
+- **Linux**: Intel (x86_64) and ARM (aarch64)
+- **Windows**: x86_64 (via WSL or Git Bash)
+
 ## Security Considerations
 
-- **Certificate Security**: Keep private keys secure and rotate certificates regularly
-- **Least Privilege**: The demo uses ReadOnlyAccess; use minimal permissions in production
+### Certificate Security
+- **Private Key Protection**: Keep private keys secure and restrict access
+- **Certificate Rotation**: Rotate certificates regularly (demo uses 365-day validity)
 - **Certificate Validation**: AWS validates certificate chain and expiration
 - **Audit Trail**: All actions are logged in CloudTrail with certificate-based identity
+
+### IAM Best Practices
+- **Least Privilege**: The demo uses ReadOnlyAccess; use minimal permissions in production
+- **Trust Policy Conditions**: Consider adding certificate-based conditions for production
+- **Regular Review**: Monitor and review certificate usage and permissions
+
+### Production Recommendations
+- Use enterprise CA certificates instead of self-signed
+- Implement certificate lifecycle management
+- Monitor certificate expiration with AWS notifications
+- Use specific IAM policies instead of managed policies
+- Consider regional deployment for high availability
+- Implement certificate revocation procedures
 
 ## Troubleshooting
 
@@ -116,6 +140,7 @@ iam-roles-anywhere-demo/
 1. **"Multiple matching identities"**: Clean up duplicate trust anchors
 2. **"AccessDeniedException"**: Check IAM role trust policy format
 3. **Certificate errors**: Ensure certificates have proper extensions
+4. **Platform not supported"**: Download signing helper manually from AWS documentation
 
 ### Debug Commands
 
@@ -128,22 +153,56 @@ aws rolesanywhere list-profiles
 
 # Verify certificate
 openssl x509 -in certificates/client-cert.pem -text -noout
+
+# Test AWS credentials
+aws sts get-caller-identity
 ```
+
+### Manual Binary Download
+
+If automatic download fails, download the AWS signing helper manually:
+
+1. Visit: https://docs.aws.amazon.com/rolesanywhere/latest/userguide/credential-helper.html
+2. Download the appropriate binary for your platform
+3. Place it in the demo directory as `aws_signing_helper`
+4. Make it executable: `chmod +x aws_signing_helper`
 
 ## Production Considerations
 
-- Use enterprise CA certificates instead of self-signed
-- Implement certificate rotation procedures
-- Monitor certificate expiration
-- Use specific IAM policies instead of ReadOnlyAccess
-- Consider regional deployment for high availability
+### Certificate Management
+- **Enterprise CA Integration**: Use your organization's PKI infrastructure
+- **Certificate Templates**: Define standard certificate templates with required extensions
+- **Automated Renewal**: Implement automated certificate renewal processes
+- **Revocation Lists**: Maintain and distribute certificate revocation lists
+
+### Security Hardening
+- **Trust Policy Conditions**: Add certificate subject/issuer conditions
+- **Session Policies**: Use session policies to further restrict permissions
+- **Monitoring**: Implement comprehensive logging and monitoring
+- **Network Security**: Use VPC endpoints for private connectivity
+
+### Operational Excellence
+- **Infrastructure as Code**: Use CloudFormation or Terraform for resource management
+- **CI/CD Integration**: Integrate certificate-based authentication in deployment pipelines
+- **Documentation**: Maintain comprehensive documentation for certificate procedures
+- **Training**: Ensure teams understand certificate-based authentication concepts
 
 ## Learn More
 
 - [AWS IAM Roles Anywhere Documentation](https://docs.aws.amazon.com/rolesanywhere/)
 - [IAM Roles Anywhere User Guide](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/)
 - [Certificate Requirements](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/trust-model.html)
+- [Security Best Practices](https://docs.aws.amazon.com/prescriptive-guidance/latest/certificate-based-access-controls/)
+- [AWS Private CA](https://docs.aws.amazon.com/privateca/latest/userguide/)
+
+## Support
+
+For issues with this demo:
+1. Check the troubleshooting section above
+2. Verify your AWS CLI configuration
+3. Ensure all prerequisites are installed
+4. Review AWS CloudTrail logs for detailed error information
 
 ---
 
-**Note**: This demo is for educational purposes. In production, use proper certificate management and minimal IAM permissions.
+**Note**: This demo is for educational purposes. In production, use proper certificate management, enterprise PKI infrastructure, and minimal IAM permissions following the principle of least privilege.

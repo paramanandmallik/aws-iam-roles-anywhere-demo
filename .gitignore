@@ -1,15 +1,38 @@
-# Generated certificates and keys
+# AWS IAM Roles Anywhere Demo - Git Ignore
+
+# Generated certificates (contains private keys)
 certificates/
+*.pem
+*.csr
+*.srl
 
 # AWS signing helper binary
 aws_signing_helper
+aws_signing_helper.exe
 
 # Temporary AWS config files
-.aws/
-*config-roles-anywhere*
+.aws/config-roles-anywhere
 
-# macOS
+# Temporary files
+/tmp/
+*.tmp
+*.temp
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # Logs
 *.log
