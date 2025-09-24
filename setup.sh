@@ -50,14 +50,14 @@ openssl genrsa -out certificates/client-key.pem 2048
 openssl req -new -key certificates/client-key.pem -out certificates/client.csr \
     -subj "/C=US/ST=CA/L=San Francisco/O=Demo/CN=Demo Client"
 
-# Generate client certificate signed by CA
+# Generate client certificate signed by CA with required extensions for IAM Roles Anywhere
 openssl x509 -req -in certificates/client.csr -CA certificates/ca-cert.pem -CAkey certificates/ca-key.pem \
     -CAcreateserial -out certificates/client-cert.pem -days 365 \
     -extensions v3_req -extfile <(
 cat <<EOF
 [v3_req]
 basicConstraints = CA:FALSE
-keyUsage = nonRepudiation,digitalSignature,keyEncipherment
+keyUsage = critical,digitalSignature,keyEncipherment
 EOF
 )
 
@@ -107,8 +107,15 @@ fi
 ROLE_ARN=$(aws iam get-role --role-name $ROLE_NAME --query 'Role.Arn' --output text)
 echo "Role ARN: $ROLE_ARN"
 
-# Create trust anchor using JSON input for better reliability
+# Create trust anchor using the SAME CA certificate that signed the client certificate
 echo "📋 Creating trust anchor..."
+
+# Delete existing trust anchor with same name to avoid conflicts
+EXISTING_TA_ID=$(aws rolesanywhere list-trust-anchors --query 'trustAnchors[?name==`DemoTrustAnchor`].trustAnchorId' --output text 2>/dev/null)
+if [ -n "$EXISTING_TA_ID" ] && [ "$EXISTING_TA_ID" != "None" ]; then
+    echo "🗑️  Removing existing trust anchor to ensure certificate consistency"
+    aws rolesanywhere delete-trust-anchor --trust-anchor-id "$EXISTING_TA_ID" >/dev/null 2>&1 || true
+fi
 
 # Handle base64 encoding cross-platform
 if base64 --help 2>&1 | grep -q "wrap" 2>/dev/null; then
@@ -132,26 +139,25 @@ cat > /tmp/trust-anchor.json <<EOF
 EOF
 
 if TRUST_ANCHOR_ARN=$(aws rolesanywhere create-trust-anchor --cli-input-json file:///tmp/trust-anchor.json --query 'trustAnchor.trustAnchorArn' --output text 2>/dev/null); then
-    echo "✅ Trust anchor created: $TRUST_ANCHOR_ARN"
+    echo "✅ Trust anchor created with current CA certificate: $TRUST_ANCHOR_ARN"
 else
-    echo "ℹ️  Trust anchor may already exist"
-    TRUST_ANCHOR_ARN=$(aws rolesanywhere list-trust-anchors --query 'trustAnchors[?name==`DemoTrustAnchor`].trustAnchorArn' --output text)
+    echo "❌ Failed to create trust anchor"
+    exit 1
+fi
+
+# Delete existing profile to ensure clean state
+EXISTING_PROFILE_ID=$(aws rolesanywhere list-profiles --query 'profiles[?name==`DemoProfile`].profileId' --output text 2>/dev/null)
+if [ -n "$EXISTING_PROFILE_ID" ] && [ "$EXISTING_PROFILE_ID" != "None" ]; then
+    echo "🗑️  Removing existing profile to ensure clean state"
+    aws rolesanywhere delete-profile --profile-id "$EXISTING_PROFILE_ID" >/dev/null 2>&1 || true
 fi
 
 # Create profile (enabled by default)
 if PROFILE_ARN=$(aws rolesanywhere create-profile --name "DemoProfile" --role-arns "$ROLE_ARN" --enabled --query 'profile.profileArn' --output text 2>/dev/null); then
     echo "✅ Profile created and enabled: $PROFILE_ARN"
 else
-    echo "ℹ️  Profile may already exist, ensuring it's enabled"
-    PROFILE_ARN=$(aws rolesanywhere list-profiles --query 'profiles[?name==`DemoProfile`].profileArn' --output text)
-    PROFILE_ID=$(aws rolesanywhere list-profiles --query 'profiles[?name==`DemoProfile`].profileId' --output text)
-    if [ -n "$PROFILE_ID" ]; then
-        if aws rolesanywhere enable-profile --profile-id "$PROFILE_ID" >/dev/null 2>&1; then
-            echo "✅ Profile enabled: $PROFILE_ARN"
-        else
-            echo "ℹ️  Profile already enabled: $PROFILE_ARN"
-        fi
-    fi
+    echo "❌ Failed to create profile"
+    exit 1
 fi
 
 # Clean up temp file
