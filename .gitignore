@@ -1,0 +1,15 @@
+# Generated certificates and keys
+certificates/
+
+# AWS signing helper binary
+aws_signing_helper
+
+# Temporary AWS config files
+.aws/
+*config-roles-anywhere*
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
