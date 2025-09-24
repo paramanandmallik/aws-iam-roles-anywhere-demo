@@ -38,7 +38,14 @@ AWS IAM Roles Anywhere enables workloads outside of AWS to access AWS resources 
    ./demo.sh
    ```
 
-4. **Cleanup** (removes all resources):
+4. **Test with Java SDK** (optional):
+   ```bash
+   cd JavaDemo
+   ./setup-config.sh
+   mvn compile exec:java
+   ```
+
+5. **Cleanup** (removes all resources):
    ```bash
    ./cleanup.sh
    ```
@@ -97,11 +104,59 @@ iam-roles-anywhere-demo/
 ├── setup.sh           # Setup certificates and AWS resources
 ├── demo.sh            # Run the demonstration
 ├── cleanup.sh         # Remove all resources
+├── JavaDemo/          # Java SDK demonstration
+│   ├── pom.xml        # Maven dependencies
+│   ├── setup-config.sh # AWS config setup
+│   ├── README.md      # Java demo instructions
+│   └── src/main/java/
+│       └── RolesAnywhereDemo.java # Java demo application
 └── certificates/      # Generated certificates (after setup)
     ├── ca-cert.pem    # Certificate Authority certificate
     ├── ca-key.pem     # CA private key
     ├── client-cert.pem # Client certificate
     └── client-key.pem  # Client private key
+```
+
+## Java SDK Integration
+
+The demo includes a Java SDK example that demonstrates the same certificate-based authentication using the AWS SDK for Java 2.x.
+
+### Prerequisites for Java Demo
+- Java 11 or higher
+- Maven 3.6 or higher
+- Completed main demo setup
+
+### Running Java Demo
+```bash
+cd JavaDemo
+./setup-config.sh  # Configure AWS profile
+mvn compile exec:java  # Run the demo
+```
+
+### Java Demo Features
+- **ProfileCredentialsProvider**: Uses AWS config file with `credential_process`
+- **Automatic Refresh**: SDK handles credential renewal automatically
+- **Standard Pattern**: Same approach works with any AWS service client
+- **Error Handling**: Demonstrates both successful operations and permission boundaries
+
+### Java Demo Output
+```
+🎯 AWS IAM Roles Anywhere Java SDK Demo
+========================================
+
+📋 Test 1: Getting caller identity with certificate-based authentication
+User ID: AROA...:3495443a366e075b8cef160712fee5034339a042
+Account: 123456789012
+ARN: arn:aws:sts::123456789012:assumed-role/IAMRolesAnywhereDemo/3495443a366e075b8cef160712fee5034339a042
+
+📋 Test 2: Listing S3 buckets (ReadOnly access)
+2024-01-15T10:30:45Z my-bucket-1
+2024-01-15T10:30:45Z my-bucket-2
+
+📋 Test 3: Trying to create S3 bucket (should fail - ReadOnly access)
+✅ Expected failure - ReadOnly access working correctly
+
+🎉 Demo completed successfully!
 ```
 
 ## Platform Support
