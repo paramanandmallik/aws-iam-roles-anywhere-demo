@@ -244,7 +244,6 @@ If automatic download fails, download the AWS signing helper manually:
 
 ## Learn More
 
-- [AWS IAM Roles Anywhere Documentation](https://docs.aws.amazon.com/rolesanywhere/)
 - [IAM Roles Anywhere User Guide](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/)
 - [Certificate Requirements](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/trust-model.html)
 - [Security Best Practices](https://docs.aws.amazon.com/prescriptive-guidance/latest/certificate-based-access-controls/)
